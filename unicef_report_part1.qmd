@@ -1,0 +1,102 @@
+---
+title: "Global Food Poverty: Trends, Impact and Regional Disparities"
+author: "Sachdev Sajith"
+format:
+  html:
+    embed-resources: true
+    code-fold: true
+    theme: cosmo
+---
+
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+import numpy as np
+import plotnine as p9
+import matplotlib.pyplot as plt
+
+df = pd.read_csv("merged_unicef_data.csv")
+```
+
+# Global Trend of Food Poverty
+
+```{python}
+#| label: data-trend
+
+df_trend = df[df["indicator"] == "Moderate food poverty"]
+df_trend_grouped = df_trend.groupby("year", as_index=False)["obs_value"].mean()
+```
+
+```{python}
+#| label: plot-trend
+#| fig-cap: "Global Trend of Food Poverty (2005–2022)"
+#| fig-align: center
+
+(
+    p9.ggplot(df_trend_grouped, p9.aes(x="year", y="obs_value")) +
+    p9.geom_line(color="#2C7BB6", size=1.2) +
+    p9.geom_point(size=2, color="#2C7BB6") +
+    p9.labs(
+        x="Year of Time Period",
+        y="Food Poverty Level",
+        title="Global Trend of Food Poverty"
+    ) +
+    p9.theme_minimal()
+)
+```
+
+_“Moderate food poverty is silent, but its impact lasts a lifetime”_
+
+The global trend of food poverty over the past two decades shows fluctuating levels, with notable spikes in 2006, 2010 and 2013. A dip is observed around 2007 and 2012, followed by a gradual decline after 2015. The COVID-19 pandemic in 2020 caused a clear setback, reflecting the pandemic’s impact on food security across vulnerable populations. Despite some recovery, the need for sustained efforts continues.
+
+# Comparison of Food Poverty Across Countries
+
+```{python}
+#| label: plot-bar
+
+df_bar = df[df["indicator"] == "Moderate food poverty"]
+df_bar_grouped = (
+    df_bar.groupby("country", as_index=False)["obs_value"]
+    .mean()
+    .sort_values("obs_value", ascending=False)
+    .head(50)
+)
+
+(
+    p9.ggplot(df_bar_grouped, p9.aes(x="obs_value", y="reorder(country, obs_value)")) +
+    p9.geom_col(fill="#4575B4") +
+    p9.labs(
+        title="Comparison of Food Poverty Across Countries",
+        x="Food Poverty Level",
+        y="Country"
+    ) +
+    p9.theme_minimal()
+)
+```
+
+Around the world, children are more likely to live in poverty than adults. They are also more vulnerable to its effects. According to the data, Burundi, Tanzania, Samoa, Uganda and Tuvalu are among the countries with the highest levels of food poverty. Children may experience poverty across multiple dimensions, whether deprived of shelter, food, water, education or health care. Growing up without these necessities is a violation of a child’s rights, with consequences that can last a lifetime.
+
+# Poverty Rate vs. Life Expectancy
+
+```{python}
+#| label: plot-scatter
+
+df_scatter = df[df["indicator"] == "Moderate food poverty"]
+df_scatter = df_scatter[["country", "obs_value", "Life expectancy at birth, total (years)"]].dropna()
+
+(
+    p9.ggplot(df_scatter, p9.aes(x="obs_value", y="`Life expectancy at birth, total (years)`")) +
+    p9.geom_point(alpha=0.6, color="#74ADD1") +
+    p9.geom_smooth(method="lm", se=False, color="darkblue") +
+    p9.labs(
+        title="Poverty Rate vs. Life Expectancy",
+        x="Poverty Rate",
+        y="Avg. Life Expectancy at Birth"
+    ) +
+    p9.theme_minimal()
+)
+```
+
+A clear relationship between poverty rates and life expectancy across countries is highlighted here. As poverty increases, average life expectancy tends to decline. While some countries with moderate poverty still maintain relatively high life expectancy due to strong public services and support, this visualization underscores the urgent need for targeted interventions in high-poverty regions to ensure that poverty does not determine how long or how well an individual will live.
